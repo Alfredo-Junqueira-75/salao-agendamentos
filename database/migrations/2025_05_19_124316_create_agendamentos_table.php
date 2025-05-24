@@ -16,6 +16,7 @@ return new class extends Migration
     $table->foreignId('cliente_id')->constrained()->onDelete('cascade');
     $table->foreignId('profissional_id')->constrained()->onDelete('cascade');
     $table->foreignId('servico_id')->constrained()->onDelete('cascade');
+    $table->foreignId('salao_id')->constrained()->onDelete('cascade');
     $table->dateTime('data_hora');
     $table->enum('status', ['pendente', 'confirmado', 'cancelado'])->default('pendente');
     $table->timestamps();

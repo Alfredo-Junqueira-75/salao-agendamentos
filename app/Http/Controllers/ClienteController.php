@@ -19,7 +19,7 @@ class ClienteController extends Controller
             'nome' => 'required|string|max:255',
             'email' => 'required|email|unique:clientes,email',
             'telefone' => 'nullable|string|max:20',
-            'password' => 'required|min:6'
+            'password' => 'required|string|min:6'
         ]);
 
         $cliente = Cliente::create([
@@ -46,7 +46,7 @@ class ClienteController extends Controller
             'nome' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:clientes,email,' . $id,
             'telefone' => 'nullable|string|max:20',
-            'password' => 'nullable|min:6'
+            'password' => 'nullable|string|min:6'
         ]);
 
         $cliente->nome = $request->nome ?? $cliente->nome;

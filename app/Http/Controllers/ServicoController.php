@@ -9,7 +9,7 @@ class ServicoController extends Controller
 {
     public function index()
     {
-        $servicos = Servico::with('salao')->get();
+        $servicos = Servico::all(); // removido with('salao')
         return response()->json($servicos);
     }
 
@@ -19,14 +19,12 @@ class ServicoController extends Controller
             'nome' => 'required|string|max:255',
             'preco' => 'required|numeric|min:0',
             'duracao' => 'required|date_format:H:i:s',
-            'salao_id' => 'required|exists:salaos,id',
         ]);
 
         $servico = Servico::create([
             'nome' => $request->nome,
             'preco' => $request->preco,
             'duracao' => $request->duracao,
-            'salao_id' => $request->salao_id
         ]);
 
         return response()->json($servico, 201);
@@ -34,7 +32,7 @@ class ServicoController extends Controller
 
     public function show($id)
     {
-        $servico = Servico::with('salao')->findOrFail($id);
+        $servico = Servico::findOrFail($id);
         return response()->json($servico);
     }
 
@@ -46,11 +44,10 @@ class ServicoController extends Controller
             'nome' => 'sometimes|required|string|max:255',
             'preco' => 'sometimes|required|numeric|min:0',
             'duracao' => 'sometimes|required|date_format:H:i:s',
-            'salao_id' => 'sometimes|required|exists:salaos,id',
         ]);
 
         $servico->update($request->only([
-            'nome', 'preco', 'duracao', 'salao_id'
+            'nome', 'preco', 'duracao'
         ]));
 
         return response()->json($servico);

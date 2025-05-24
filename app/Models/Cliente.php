@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Cliente extends Model
 {
     protected $fillable = [
-        'nome', 'email', 'senha', 'tipo', 'telefone', 
+        'nome', 'email', 'telefone', 'password', 
     ];
 
     public function agendamentos() {

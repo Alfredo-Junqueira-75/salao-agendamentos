@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Servico extends Model
 {
     protected $fillable = [
-        'nome', 'preco', 'duracao', 
+        'nome', 'preco', 'duracao'
     ];
     public function salao() {
         return $this->belongsTo(Salao::class);

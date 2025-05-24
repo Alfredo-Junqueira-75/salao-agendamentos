@@ -9,7 +9,7 @@ class ProfissionalController extends Controller
 {
     public function index()
     {
-        $profissionais = Profissional::with('salao')->get();
+        $profissionais = Profissional::all(); // Removido with('salao')
         return response()->json($profissionais);
     }
 
@@ -17,16 +17,24 @@ class ProfissionalController extends Controller
     {
         $request->validate([
             'nome' => 'required|string|max:255',
-            'email' => 'required|email|unique:profissionals,email',
-            'telefone' => 'nullable|string|max:20',
             'especialidade' => 'required|string|max:255',
+            'horarioTrabalho' => 'required|string|max:255',
+            'agendamentos' => 'required|string|max:255',
+            'email' => 'required|email|unique:profissionals,email',
+            'senha' => 'required|string|min:6',
+            'tipo' => 'required|in:profissional,administrador',
+            'telefone' => 'nullable|string|max:20',
         ]);
 
         $profissional = Profissional::create([
             'nome' => $request->nome,
-            'email' => $request->email,
-            'telefone' => $request->telefone,
             'especialidade' => $request->especialidade,
+            'horarioTrabalho' => $request->horarioTrabalho,
+            'agendamentos' => $request->agendamentos,
+            'email' => $request->email,
+            'senha' => bcrypt($request->senha), // senha criptografada
+            'tipo' => $request->tipo,
+            'telefone' => $request->telefone,
         ]);
 
         return response()->json($profissional, 201);
@@ -34,7 +42,7 @@ class ProfissionalController extends Controller
 
     public function show($id)
     {
-        $profissional = Profissional::with('salao')->findOrFail($id);
+        $profissional = Profissional::findOrFail($id);
         return response()->json($profissional);
     }
 
@@ -44,15 +52,25 @@ class ProfissionalController extends Controller
 
         $request->validate([
             'nome' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:profissionals,email,' . $id,
-            'telefone' => 'nullable|string|max:20',
             'especialidade' => 'sometimes|required|string|max:255',
-            'salao_id' => 'sometimes|required|exists:salaos,id',
+            'horarioTrabalho' => 'sometimes|required|string|max:255',
+            'agendamentos' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:profissionals,email,' . $id,
+            'senha' => 'nullable|string|min:6',
+            'tipo' => 'sometimes|required|in:profissional,administrador',
+            'telefone' => 'nullable|string|max:20',
         ]);
 
-        $profissional->update($request->only([
-            'nome', 'email', 'telefone', 'especialidade', 'salao_id'
+        $profissional->fill($request->only([
+            'nome', 'especialidade', 'horarioTrabalho', 'agendamentos',
+            'email', 'tipo', 'telefone'
         ]));
+
+        if ($request->filled('senha')) {
+            $profissional->senha = bcrypt($request->senha);
+        }
+
+        $profissional->save();
 
         return response()->json($profissional);
     }

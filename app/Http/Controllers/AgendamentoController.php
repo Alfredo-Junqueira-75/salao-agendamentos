@@ -22,13 +22,15 @@ class AgendamentoController extends Controller
             'cliente_id' => 'required|exists:clientes,id',
             'profissional_id' => 'required|exists:profissionals,id',
             'servico_id' => 'required|exists:servicos,id',
-            'data_hora' => 'required|date'
+            'salao_id' => 'required|exists:salaos,id',
+            'data_hora' => 'required|date',
         ]);
 
         $agendamento = Agendamento::create([
             'cliente_id' => $request->cliente_id,
             'profissional_id' => $request->profissional_id,
             'servico_id' => $request->servico_id,
+            'salao_id' => $request->salao_id,
             'data_hora' => $request->data_hora,
             'status' => 'pendente',
         ]);
@@ -46,7 +48,13 @@ class AgendamentoController extends Controller
     {
         $agendamento = Agendamento::findOrFail($id);
 
-        $agendamento->update($request->only(['data_hora', 'status']));
+        $request->validate([
+            'data_hora' => 'sometimes|date',
+            'status' => 'sometimes|in:pendente,confirmado,cancelado',
+            'salao_id' => 'sometimes|exists:salaos,id',
+        ]);
+
+        $agendamento->update($request->only(['data_hora', 'status', 'salao_id']));
 
         return response()->json($agendamento);
     }

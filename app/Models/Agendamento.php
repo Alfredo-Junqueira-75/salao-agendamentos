@@ -8,7 +8,7 @@ class Agendamento extends Model
 {
     //
     protected $fillable = [
-        'dataHora', 'status', 'cliente_id', 'profissional_id', 'servico_id',
+        'data_hora', 'status', 'cliente_id', 'profissional_id', 'servico_id', 'salao_id'
     ];
 
     public function cliente() {
@@ -22,5 +22,10 @@ class Agendamento extends Model
     public function servico() {
         return $this->belongsTo(Servico::class);
     }
+    public function salao()
+{
+    return $this->belongsTo(Salao::class);
+}
+
 
 }
