@@ -19,7 +19,6 @@ class ProfissionalController extends Controller
             'nome' => 'required|string|max:255',
             'especialidade' => 'required|string|max:255',
             'horarioTrabalho' => 'required|string|max:255',
-            'agendamentos' => 'required|string|max:255',
             'email' => 'required|email|unique:profissionals,email',
             'senha' => 'required|string|min:6',
             'tipo' => 'required|in:profissional,administrador',
@@ -30,7 +29,6 @@ class ProfissionalController extends Controller
             'nome' => $request->nome,
             'especialidade' => $request->especialidade,
             'horarioTrabalho' => $request->horarioTrabalho,
-            'agendamentos' => $request->agendamentos,
             'email' => $request->email,
             'senha' => bcrypt($request->senha), // senha criptografada
             'tipo' => $request->tipo,
@@ -54,7 +52,6 @@ class ProfissionalController extends Controller
             'nome' => 'sometimes|required|string|max:255',
             'especialidade' => 'sometimes|required|string|max:255',
             'horarioTrabalho' => 'sometimes|required|string|max:255',
-            'agendamentos' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:profissionals,email,' . $id,
             'senha' => 'nullable|string|min:6',
             'tipo' => 'sometimes|required|in:profissional,administrador',
@@ -62,8 +59,7 @@ class ProfissionalController extends Controller
         ]);
 
         $profissional->fill($request->only([
-            'nome', 'especialidade', 'horarioTrabalho', 'agendamentos',
-            'email', 'tipo', 'telefone'
+            'nome', 'especialidade', 'horarioTrabalho',
         ]));
 
         if ($request->filled('senha')) {

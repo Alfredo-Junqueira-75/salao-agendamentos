@@ -8,12 +8,9 @@ class Profissional extends Model
 {
     protected $fillable = [
         'nome', 'email', 'senha', 'tipo', 'telefone',
-        'especialidade', 'horarioTrabalho', 'agendamentos',
+        'especialidade', 'horarioTrabalho', 
     ];
 
-    public function agendamentos() {
-        return $this->hasMany(Agendamento::class);
-    }
 
     public function salao() {
         return $this->belongsTo(Salao::class);

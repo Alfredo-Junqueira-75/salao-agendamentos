@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('nome');
             $table->string('especialidade');
             $table->string('horarioTrabalho');
-            $table->string('agendamentos');
             $table->string('email')->unique();
             $table->string('senha');
             $table->enum('tipo', ['profissional', 'administrador']);
