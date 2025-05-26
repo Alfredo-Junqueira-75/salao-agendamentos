@@ -1,0 +1,175 @@
+/* Importa as diretivas do Tailwind CSS */
+/* @tailwind base; */
+/* @tailwind components; */
+/* @tailwind utilities; */
+
+/* Importação da fonte Inter do Google Fonts */
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Estilos para o botão de tab ativo */
+.tab-button.active {
+  color: #3B82F6;
+  /* Cor azul do Tailwind (blue-600) */
+  border-bottom: 3px solid #3B82F6;
+  font-weight: 600;
+  /* Semibold */
+}
+
+/* Estilo para botões primários */
+.btn-primary {
+  background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para o overlay do modal */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease-out forwards;
+  /* Adicionado 'forwards' para manter o estado final */
+}
+
+/* Estilos para o Conteúdo do Modal */
+.modal-content {
+  animation: slideIn 0.3s ease-out forwards;
+  /* Adicionado 'forwards' para manter o estado final */
+}
+
+/* Animações de Entrada para Modal e Mensagens */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Estilos Específicos para a Tela de Login */
+#login-screen {
+  background-color: #1a202c;
+  /* Fundo escuro para contraste */
+}
+
+#login-card {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Animação de Fundo com Blobs/Ondas */
+@keyframes blob {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite cubic-bezier(0.6, 0.01, 0.3, 0.9);
+}
+
+.animate-gradient-shift {
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Estilos para o campo de input em foco */
+input:focus {
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  /* Cor de foco do Tailwind blue-500 com opacidade */
+}
+
+/* Responsividade para botões de aba em telas menores */
+@media (max-width: 768px) {
+  .tab-button {
+    flex-grow: 1;
+    /* Faz com que os botões ocupem o espaço disponível */
+    text-align: center;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Estilo para a scrollbar (opcional) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
