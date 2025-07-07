@@ -15,7 +15,7 @@ use App\Http\Controllers\AuthController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 
@@ -35,6 +35,8 @@ Route::post('/admin/login', [AuthController::class, 'adminLogin'])->name('admin.
 // Home pages
 Route::get('/cliente/home', [AuthController::class, 'clienteHome'])->middleware('auth.cliente')->name('cliente.home');
 Route::get('/admin/home', [AuthController::class, 'adminHome'])->middleware('auth.admin')->name('admin.home');
+Route::get('/admin/reports/generate', [App\Http\Controllers\ReportController::class, 'generateReport'])->middleware('auth.admin')->name('admin.reports.generate');
+Route::get('/profissional/home', [AuthController::class, 'profissionalHome'])->middleware('auth.profissional')->name('profissional.home');
 
 Route::get('/admin/login', [AuthController::class, 'showAdminLoginForm'])->name('admin.login.form');
 Route::post('/admin/login', [AuthController::class, 'adminLogin'])->name('admin.login');

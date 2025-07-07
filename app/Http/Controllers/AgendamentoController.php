@@ -10,9 +10,19 @@ use Illuminate\Http\Request;
 
 class AgendamentoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $agendamentos = Agendamento::with(['cliente', 'profissional', 'servico'])->get();
+        $query = Agendamento::with(['cliente', 'profissional', 'servico']);
+
+        if ($request->has('profissional_id')) {
+            $query->where('profissional_id', $request->profissional_id);
+        }
+
+        if ($request->has('cliente_id')) {
+            $query->where('cliente_id', $request->cliente_id);
+        }
+
+        $agendamentos = $query->get();
         return response()->json($agendamentos);
     }
 

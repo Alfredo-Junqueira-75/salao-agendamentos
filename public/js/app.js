@@ -131,15 +131,79 @@ if (confirmDeleteBtn) {
  * @param {string} endpoint - O endpoint da API (ex: 'clientes').
  * @returns {Promise<Array>} - Uma promessa que resolve com os dados.
  */
-async function fetchData(endpoint) {
+async function fetchData(endpoint, params = {}) {
   try {
-    const response = await axios.get(`${BASE_URL}${endpoint}`);
+    const response = await axios.get(`${BASE_URL}${endpoint}`, { params });
     return response.data;
   } catch (error) {
     console.error(`Erro ao buscar ${endpoint}:`, error);
     showMessage(`Erro ao carregar ${endpoint}.`, 'error');
-    return [];
+    throw error; // Re-throw the error so loadData can handle it
   }
+}
+
+let calendarInstance = null; // Global variable to hold the calendar instance
+
+async function initializeCalendar(calendarEl, professionalId = null) {
+  if (!calendarEl) return;
+
+  if (calendarInstance) {
+    calendarInstance.destroy(); // Destroy existing calendar instance if any
+  }
+
+  calendarInstance = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    locale: 'pt-br',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    events: async (fetchInfo, successCallback, failureCallback) => {
+      try {
+        const params = {
+          start: fetchInfo.startStr,
+          end: fetchInfo.endStr,
+        };
+        if (professionalId) {
+          params.profissional_id = professionalId;
+        }
+        const agendamentos = await fetchData('agendamentos', params);
+        const events = agendamentos.map(agendamento => ({
+          id: agendamento.id,
+          title: `${getServiceName(agendamento.servico_id)} - ${getClientName(agendamento.cliente_id)}`,
+          start: agendamento.data_hora,
+          extendedProps: {
+            status: agendamento.status,
+            cliente_id: agendamento.cliente_id,
+            profissional_id: agendamento.profissional_id,
+            servico_id: agendamento.servico_id,
+            salao_id: agendamento.salao_id,
+          },
+          color: agendamento.status === 'confirmado' ? '#34D399' : (agendamento.status === 'cancelado' ? '#EF4444' : '#F59E0B'), // Tailwind green, red, yellow
+        }));
+        successCallback(events);
+      } catch (error) {
+        failureCallback(error);
+      }
+    },
+    eventClick: function(info) {
+      // Reutiliza o modal existente para edição/visualização
+      openModal('agendamentos', info.event.id);
+    },
+    dateClick: function(info) {
+      // Permite adicionar um novo agendamento ao clicar em uma data
+      // Preenche a data/hora no modal
+      openModal('agendamentos');
+      setTimeout(() => {
+        const dateTimeInput = modalForm.querySelector('input[name="data_hora"]');
+        if (dateTimeInput) {
+          dateTimeInput.value = info.dateStr.slice(0, 16); // Format to YYYY-MM-DDTHH:MM
+        }
+      }, 100);
+    }
+  });
+  calendarInstance.render();
 }
 
 // Funções auxiliares para obter nomes a partir de IDs
@@ -215,8 +279,8 @@ function renderProfissionais(profissionais) {
                 <p class="text-gray-600"><strong>Tipo:</strong> ${profissional.tipo || 'N/A'}</p>
                 <p class="text-gray-600"><strong>Horário:</strong> ${profissional.horarioTrabalho || 'N/A'}</p>
                 <div class="mt-4 flex space-x-2">
-                    <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300" data-id="${profissional.id}" data-type="profissional">Editar</button>
-                    <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300" data-id="${profissional.id}" data-type="profissional">Excluir</button>
+                    <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300" data-id="${profissional.id}" data-type="profissionais">Editar</button>
+                    <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300" data-id="${profissional.id}" data-type="profissionais">Excluir</button>
                 </div>
             </div>
         `;
@@ -244,8 +308,8 @@ function renderServicos(servicos) {
                 <p class="text-gray-600"><strong>Preço:</strong> ${servico.preco} Kz</p>
                 <p class="text-gray-600"><strong>Duração:</strong> ${servico.duracao}</p>
                 <div class="mt-4 flex space-x-2">
-                    <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300" data-id="${servico.id}" data-type="servico">Editar</button>
-                    <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300" data-id="${servico.id}" data-type="servico">Excluir</button>
+                    <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300" data-id="${servico.id}" data-type="servicos">Editar</button>
+                    <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300" data-id="${servico.id}" data-type="servicos">Excluir</button>
                 </div>
             </div>
         `;
@@ -266,7 +330,27 @@ function renderAgendamentos(agendamentos) {
     agendamentosList.innerHTML = '<p class="text-gray-500">Nenhum agendamento encontrado.</p>';
     return;
   }
+
+  const isProfessionalPage = agendamentosList.dataset.profissionalId !== undefined;
+  const isClientPage = agendamentosList.dataset.clienteId !== undefined;
+
   agendamentos.forEach(agendamento => {
+    let buttonsHtml = '';
+
+    if (!isProfessionalPage && !isClientPage) { // Admin page
+      buttonsHtml += `
+            <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300" data-id="${agendamento.id}" data-type="agendamentos">Editar</button>
+            <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300" data-id="${agendamento.id}" data-type="agendamentos">Excluir</button>
+        `;
+    }
+
+    if (isProfessionalPage && agendamento.status === 'pendente') {
+      buttonsHtml += `
+            <button class="confirm-btn bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 transition duration-300" data-id="${agendamento.id}">Confirmar</button>
+            <button class="cancel-btn bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition duration-300" data-id="${agendamento.id}">Cancelar</button>
+        `;
+    }
+
     const card = `
             <div class="card bg-gray-50 p-6 rounded-lg shadow-md border border-gray-200">
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">Agendamento #${agendamento.id}</h3>
@@ -277,8 +361,7 @@ function renderAgendamentos(agendamentos) {
                 <p class="text-gray-600"><strong>Serviço:</strong> ${getServiceName(agendamento.servico_id)}</p>
                 <p class="text-gray-600"><strong>Salão:</strong> ${getSalaoName(agendamento.salao_id)}</p>
                 <div class="mt-4 flex space-x-2">
-                    <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300" data-id="${agendamento.id}" data-type="agendamento">Editar</button>
-                    <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300" data-id="${agendamento.id}" data-type="agendamento">Excluir</button>
+                    ${buttonsHtml}
                 </div>
             </div>
         `;
@@ -306,8 +389,8 @@ function renderSaloes(saloes) {
                 <p class="text-gray-600"><strong>Endereço:</strong> ${salao.endereco}</p>
                 <p class="text-gray-600"><strong>Telefone:</strong> ${salao.telefone}</p>
                 <div class="mt-4 flex space-x-2">
-                    <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300" data-id="${salao.id}" data-type="salao">Editar</button>
-                    <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300" data-id="${salao.id}" data-type="salao">Excluir</button>
+                    <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition duration-300" data-id="${salao.id}" data-type="saloes">Editar</button>
+                    <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-300" data-id="${salao.id}" data-type="saloes">Excluir</button>
                 </div>
             </div>
         `;
@@ -454,8 +537,37 @@ async function openModal(type, id = null) {
     dynamicSelectData[key] = await dynamicSelectDataPromises[key];
   }
 
+  const agendamentosList = document.getElementById('agendamentosList');
+  const clienteId = agendamentosList ? agendamentosList.dataset.clienteId : null;
 
   for (const field of fields) {
+    if (type === 'agendamentos' && id === null && field.name === 'cliente_id' && clienteId) {
+        const div = document.createElement('div');
+        div.className = 'mb-4';
+        const label = document.createElement('label');
+        label.htmlFor = field.name;
+        label.className = 'block text-gray-700 text-sm font-bold mb-2';
+        label.textContent = field.label;
+        div.appendChild(label);
+
+        const clienteNome = document.querySelector('h2').textContent.replace('Olá, ', '').replace('!', '');
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.className = 'shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-200';
+        textInput.value = clienteNome;
+        textInput.disabled = true;
+        div.appendChild(textInput);
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'cliente_id';
+        hiddenInput.value = clienteId;
+        div.appendChild(hiddenInput);
+
+        modalForm.appendChild(div);
+        continue;
+    }
+
     // Não mostra o campo de senha ao editar
     if (id && (field.name === 'password' || field.name === 'senha')) {
       // Para edição, a senha não é preenchida e não é obrigatória
@@ -598,25 +710,27 @@ if (modalForm) {
  * Anexa event listeners aos botões de editar e excluir.
  */
 function attachEventListeners() {
-  document.querySelectorAll('.edit-btn').forEach(button => {
-    button.onclick = async (e) => {
-      const id = e.target.dataset.id;
-      const type = e.target.dataset.type;
-      // openModal agora busca os dados internamente
-      openModal(type + 's', id);
-    };
-  });
+  // Use event delegation on a common parent element (e.g., document.body)
+  // This ensures that event listeners work for dynamically added elements.
+  document.body.addEventListener('click', async (e) => {
+    const target = e.target;
 
-  document.querySelectorAll('.delete-btn').forEach(button => {
-    button.onclick = async (e) => {
-      const id = e.target.dataset.id;
-      const type = e.target.dataset.type;
+    // Handle Edit button click
+    if (target.classList.contains('edit-btn')) {
+      const id = target.dataset.id;
+      const type = target.dataset.type;
+      openModal(type, id);
+    }
+    // Handle Delete button click
+    else if (target.classList.contains('delete-btn')) {
+      const id = target.dataset.id;
+      const type = target.dataset.type;
 
       openConfirmationModal(`Tem certeza que deseja excluir este ${type}?`, async () => {
         try {
-          await axios.delete(`${BASE_URL}${type}s/${id}`);
+          await axios.delete(`${BASE_URL}${type}/${id}`);
           showMessage('Item excluído com sucesso!', 'success');
-          loadData(type + 's'); // Recarrega a lista
+          loadData(type); // Recarrega a lista
         } catch (error) {
           console.error(`Erro ao excluir ${type}:`, error);
           const errorMessage = error.response && error.response.data
@@ -625,7 +739,35 @@ function attachEventListeners() {
           showMessage(errorMessage, 'error');
         }
       });
-    };
+    }
+    // Handle Confirm button click (for agendamentos)
+    else if (target.classList.contains('confirm-btn')) {
+      const id = target.dataset.id;
+      openConfirmationModal('Tem certeza que deseja confirmar este agendamento?', async () => {
+        try {
+          await axios.put(`${BASE_URL}agendamentos/${id}`, { status: 'confirmado' });
+          showMessage('Agendamento confirmado com sucesso!', 'success');
+          loadData('agendamentos');
+        } catch (error) {
+          console.error('Erro ao confirmar agendamento:', error);
+          showMessage('Erro ao confirmar agendamento.', 'error');
+        }
+      });
+    }
+    // Handle Cancel button click (for agendamentos)
+    else if (target.classList.contains('cancel-btn')) {
+      const id = target.dataset.id;
+      openConfirmationModal('Tem certeza que deseja cancelar este agendamento?', async () => {
+        try {
+          await axios.put(`${BASE_URL}agendamentos/${id}`, { status: 'cancelado' });
+          showMessage('Agendamento cancelado com sucesso!', 'success');
+          loadData('agendamentos');
+        } catch (error) {
+          console.error('Erro ao cancelar agendamento:', error);
+          showMessage('Erro ao cancelar agendamento.', 'error');
+        }
+      });
+    }
   });
 }
 
@@ -634,6 +776,10 @@ function attachEventListeners() {
  * @param {string} entityType - O tipo da entidade a ser carregada (ex: 'clientes').
  */
 async function loadData(entityType) {
+  const agendamentosList = document.getElementById('agendamentosList');
+  const profissionalId = agendamentosList ? agendamentosList.dataset.profissionalId : null;
+  const clienteId = agendamentosList ? agendamentosList.dataset.clienteId : null;
+
   // Fetch all lookup data if it's for agendamentos or if it's not already loaded
   // This ensures lookup data is available when needed for rendering or dynamic selects
   try {
@@ -647,7 +793,21 @@ async function loadData(entityType) {
     // Continue loading main data even if lookup fails
   }
 
-  const data = await fetchData(entityType);
+  let data = []; // Initialize data as an empty array
+  try {
+    if (entityType === 'agendamentos' && (profissionalId || clienteId)) {
+      const params = {};
+      if (profissionalId) params.profissional_id = profissionalId;
+      if (clienteId) params.cliente_id = clienteId;
+      data = await fetchData(entityType, params);
+    } else {
+      data = await fetchData(entityType);
+    }
+  } catch (error) {
+    // Error already shown by fetchData, just prevent rendering with bad data
+    return; 
+  }
+
   if (renderFunctions[entityType]) {
     renderFunctions[entityType](data);
   }
@@ -680,7 +840,13 @@ document.querySelectorAll('.tab-button').forEach(button => {
     document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
     const tabId = e.target.dataset.tab;
     document.getElementById(tabId).classList.remove('hidden');
-    loadData(tabId); // Carrega os dados da nova aba
+    if (tabId === 'calendario') {
+      const calendarEl = document.getElementById('calendar');
+      const profissionalId = document.querySelector('[data-profissional-id]') ? document.querySelector('[data-profissional-id]').dataset.profissionalId : null;
+      initializeCalendar(calendarEl, profissionalId);
+    } else {
+      loadData(tabId); // Carrega os dados da nova aba
+    }
   });
 });
 
@@ -727,7 +893,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // Se estamos na página do dashboard
   else if (document.getElementById('dashboard-screen')) {
-    loadData('clientes'); // Carrega os dados da aba de clientes ao iniciar o dashboard
+    const agendamentosList = document.getElementById('agendamentosList');
+    const calendarEl = document.getElementById('calendar');
+
+    if (agendamentosList) {
+      // Se estiver na página do cliente ou profissional, carrega agendamentos
+      loadData('agendamentos');
+    } else if (calendarEl) {
+      // Se estiver na página do admin ou profissional e tiver um calendário
+      const profissionalId = document.querySelector('[data-profissional-id]') ? document.querySelector('[data-profissional-id]').dataset.profissionalId : null;
+      initializeCalendar(calendarEl, profissionalId);
+    } else {
+      // Se estiver na página do admin e não tiver agendamentosList nem calendário (aba padrão)
+      loadData('clientes');
+    }
 
     // Lógica do menu mobile
     if (mobileMenuButton && mobileMenu) {

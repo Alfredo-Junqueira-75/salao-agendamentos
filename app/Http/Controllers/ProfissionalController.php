@@ -73,7 +73,8 @@ class ProfissionalController extends Controller
 
     public function destroy($id)
     {
-        Profissional::destroy($id);
+        $profissional = Profissional::findOrFail($id);
+        $profissional->delete();
         return response()->json(['message' => 'Profissional removido com sucesso.']);
     }
 }

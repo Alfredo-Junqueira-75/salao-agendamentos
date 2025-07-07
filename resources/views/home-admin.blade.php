@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css' rel='stylesheet' />
 </head>
 
 <body class="min-h-screen flex flex-col bg-gray-100">
@@ -21,7 +22,7 @@
 
         <nav class="hidden md:flex space-x-6 items-center">
           <a href="#" class="text-gray-600 hover:text-blue-600 transition duration-300 font-medium">Visão Geral</a>
-          <a href="#" class="text-gray-600 hover:text-blue-600 transition duration-300 font-medium">Relatórios</a>
+          <a href="{{ route('admin.reports.generate') }}" class="text-gray-600 hover:text-blue-600 transition duration-300 font-medium">Relatórios</a>
           <a href="#" class="text-gray-600 hover:text-blue-600 transition duration-300 font-medium">Configurações</a>
 
           <form method="POST" action="{{ route('logout') }}">
@@ -42,7 +43,7 @@
       <div id="mobile-menu"
         class="md:hidden hidden bg-white py-2 shadow-lg transition-all duration-330 ease-in-out transform -translate-y-full opacity-0">
         <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-600 transition duration-300">Visão Geral</a>
-        <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-600 transition duration-300">Relatórios</a>
+        <a href="{{ route('admin.reports.generate') }}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-600 transition duration-300">Relatórios</a>
         <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-600 transition duration-300">Configurações</a>
         <form method="POST" action="{{ route('logout') }}">
           @csrf
@@ -64,6 +65,7 @@
           <button class="tab-button py-3 px-4 md:px-6 text-base md:text-lg text-gray-600 hover:text-blue-600 transition duration-300" data-tab="servicos">Serviços</button>
           <button class="tab-button py-3 px-4 md:px-6 text-base md:text-lg text-gray-600 hover:text-blue-600 transition duration-300" data-tab="agendamentos">Agendamentos</button>
           <button class="tab-button py-3 px-4 md:px-6 text-base md:text-lg text-gray-600 hover:text-blue-600 transition duration-300" data-tab="saloes">Salões</button>
+          <button class="tab-button py-3 px-4 md:px-6 text-base md:text-lg text-gray-600 hover:text-blue-600 transition duration-300" data-tab="calendario">Calendário</button>
         </div>
 
         {{-- Conteúdos das abas --}}
@@ -95,6 +97,11 @@
           <h2 class="text-2xl font-semibold text-gray-700 mb-6">Lista de Salões</h2>
           <button id="addSalaoBtn" class="btn-primary text-white py-2 px-6 rounded-lg text-lg font-medium shadow-lg mb-6">Adicionar Salão</button>
           <div id="saloesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <div id="calendario" class="tab-content hidden">
+          <h2 class="text-2xl font-semibold text-gray-700 mb-6">Calendário de Agendamentos</h2>
+          <div id="calendar"></div>
         </div>
       </div>
     </main>
@@ -130,5 +137,6 @@
   </div>
 
   <script src="{{ asset('js/app.js') }}"></script>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
 </body>
 </html>

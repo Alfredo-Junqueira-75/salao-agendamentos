@@ -15,12 +15,12 @@ class ClienteAuth
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function handle($request, \Closure $next)
-{
-    if (!session()->has('cliente_id')) {
-        return redirect()->route('login.form');
-    }
+    {
+        if (session('user_type') !== 'cliente') {
+            return redirect()->route('login.form');
+        }
 
-    return $next($request);
-}
+        return $next($request);
+    }
 
 }

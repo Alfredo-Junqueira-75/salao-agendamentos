@@ -12,7 +12,7 @@
 </head>
 
 <body class="min-h-screen flex flex-col bg-gray-100">
-  <section class="min-h-screen flex flex-col">
+  <section id="dashboard-screen" class="min-h-screen flex flex-col">
     <header class="bg-white shadow-md p-4 sticky top-0 z-40">
       <div class="container mx-auto flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-800">
@@ -21,7 +21,6 @@
 
         <nav class="hidden md:flex space-x-6 items-center">
           <a href="#" class="text-gray-600 hover:text-blue-600 transition duration-300 font-medium">Visão Geral</a>
-          <a href="#" class="text-gray-600 hover:text-blue-600 transition duration-300 font-medium">Relatórios</a>
           <a href="#" class="text-gray-600 hover:text-blue-600 transition duration-300 font-medium">Configurações</a>
 
           <form method="POST" action="{{ route('logout') }}">
@@ -42,7 +41,6 @@
       <div id="mobile-menu"
         class="md:hidden hidden bg-white py-2 shadow-lg transition-all duration-330 ease-in-out transform -translate-y-full opacity-0">
         <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-600 transition duration-300">Visão Geral</a>
-        <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-600 transition duration-300">Relatórios</a>
         <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-600 transition duration-300">Configurações</a>
         <form method="POST" action="{{ route('logout') }}">
           @csrf
@@ -65,7 +63,7 @@
             Adicionar Agendamento
           </button>
 
-          <div id="agendamentosList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div id="agendamentosList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-cliente-id="{{ $cliente->id }}">
             {{-- Conteúdo dinâmico via JS --}}
           </div>
         </div>

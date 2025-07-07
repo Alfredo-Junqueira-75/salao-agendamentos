@@ -47,16 +47,23 @@ class AuthController extends Controller
 
 
     public function login(Request $request)
-{
-    $cliente = Cliente::where('email', $request->email)->first();
+    {
+        $cliente = Cliente::where('email', $request->email)->first();
 
-    if (!$cliente || !Hash::check($request->password, $cliente->password)) {
+        if ($cliente && Hash::check($request->password, $cliente->password)) {
+            session(['cliente_id' => $cliente->id, 'user_type' => 'cliente']);
+            return redirect()->route('cliente.home');
+        }
+
+        $profissional = Profissional::where('email', $request->email)->first();
+
+        if ($profissional && Hash::check($request->password, $profissional->senha)) {
+            session(['cliente_id' => $profissional->id, 'user_type' => 'profissional']);
+            return redirect()->route('profissional.home');
+        }
+
         return back()->with('error', 'Credenciais inválidas.');
     }
-
-    session(['cliente_id' => $cliente->id]);
-    return redirect()->route('cliente.home');
-}
     public function adminLogin(Request $request)
 {
     $admin = Profissional::where('email', $request->email)
@@ -87,6 +94,12 @@ class AuthController extends Controller
 
     return view('home-admin', compact('admin'));
 }
+
+    public function profissionalHome()
+    {
+        $profissional = Profissional::find(session('cliente_id'));
+        return view('home-profissional', compact('profissional'));
+    }
 
 
     public function logout()
